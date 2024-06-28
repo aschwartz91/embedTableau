@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 declare global {
   interface Window {
     tableau: any;
+    loadTableauAPI: () => Promise<void>;
   }
 }
 
@@ -15,58 +16,50 @@ export default function TableauEmbed() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchToken = async () => {
+    const fetchTokenAndLoadTableau = async () => {
       try {
+        // Fetch token
         const response = await fetch('/api/getToken');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
         setToken(data.token);
+
+        // Load Tableau API
+        await window.loadTableauAPI();
       } catch (e) {
-        console.error('Error fetching token:', e);
-        setError('Failed to fetch token. Please try again later.');
+        console.error('Error:', e);
+        setError(`Failed to initialize: ${e.message}`);
       }
     };
 
-    fetchToken();
+    fetchTokenAndLoadTableau();
   }, []);
 
   useEffect(() => {
-    if (!token || !vizRef.current) return;
+    if (!token || !vizRef.current || !window.tableau || !window.tableau.Viz) return;
 
-    const initViz = () => {
-      if (typeof window.tableau === 'undefined') {
-        console.error('Tableau API not loaded');
-        setError('Tableau API not loaded. Please refresh the page.');
-        return;
-      }
+    const vizUrl = process.env.NEXT_PUBLIC_TABLEAU_VIEW_URL;
+    
+    if (!vizUrl) {
+      setError('Tableau view URL is not set');
+      return;
+    }
 
-      const vizUrl = process.env.NEXT_PUBLIC_TABLEAU_VIEW_URL;
-      
-      if (!vizUrl) {
-        setError('Tableau view URL is not set');
-        return;
-      }
-
-      const options = {
-        token: token,
-        height: '600px',
-        width: '100%',
-        hideTabs: true,
-        hideToolbar: true,
-      };
-
-      new window.tableau.Viz(vizRef.current, vizUrl, options);
+    const options = {
+      token: token,
+      height: '600px',
+      width: '100%',
+      hideTabs: true,
+      hideToolbar: true,
     };
 
-    // Check if Tableau API is already loaded
-    if (typeof window.tableau !== 'undefined') {
-      initViz();
-    } else {
-      // If not, wait for it to load
-      window.addEventListener('tableauApiLoaded', initViz);
-      return () => window.removeEventListener('tableauApiLoaded', initViz);
+    try {
+      new window.tableau.Viz(vizRef.current, vizUrl, options);
+    } catch (e) {
+      console.error('Error creating Tableau viz:', e);
+      setError(`Failed to create Tableau visualization: ${e.message}`);
     }
   }, [token]);
 

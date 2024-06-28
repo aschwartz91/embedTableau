@@ -1,15 +1,22 @@
 // public/tableauLoader.js
-function onTableauApiLoaded() {
-    window.dispatchEvent(new Event('tableauApiLoaded'));
-  }
-  
-  if (typeof tableau !== 'undefined' && tableau.Viz) {
-    onTableauApiLoaded();
-  } else {
-    document.addEventListener('DOMContentLoaded', function() {
-      var script = document.createElement('script');
-      script.onload = onTableauApiLoaded;
-      script.src = 'https://public.tableau.com/javascripts/api/tableau-2.min.js';
-      document.head.appendChild(script);
+function loadTableauAPI() {
+    return new Promise((resolve, reject) => {
+      if (window.tableau && window.tableau.Viz) {
+        resolve();
+      } else {
+        const script = document.createElement('script');
+        script.src = 'https://public.tableau.com/javascripts/api/tableau-2.min.js';
+        script.onload = () => {
+          if (window.tableau && window.tableau.Viz) {
+            resolve();
+          } else {
+            reject(new Error('Tableau API failed to load'));
+          }
+        };
+        script.onerror = () => reject(new Error('Failed to load Tableau API script'));
+        document.head.appendChild(script);
+      }
     });
   }
+  
+  window.loadTableauAPI = loadTableauAPI;
