@@ -22,11 +22,7 @@ export default function TableauEmbed() {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        if (data.token) {
-          setToken(data.token);
-        } else {
-          throw new Error('Token not found in response');
-        }
+        setToken(data.token);
       } catch (e) {
         console.error('Error fetching token:', e);
         setError('Failed to fetch token. Please try again later.');
@@ -39,26 +35,39 @@ export default function TableauEmbed() {
   useEffect(() => {
     if (!token || !vizRef.current) return;
 
-    const vizUrl = process.env.NEXT_PUBLIC_TABLEAU_VIEW_URL;
-    
-    if (!vizUrl) {
-      setError('Tableau view URL is not set');
-      return;
+    const initViz = () => {
+      if (typeof window.tableau === 'undefined') {
+        console.error('Tableau API not loaded');
+        setError('Tableau API not loaded. Please refresh the page.');
+        return;
+      }
+
+      const vizUrl = process.env.NEXT_PUBLIC_TABLEAU_VIEW_URL;
+      
+      if (!vizUrl) {
+        setError('Tableau view URL is not set');
+        return;
+      }
+
+      const options = {
+        token: token,
+        height: '600px',
+        width: '100%',
+        hideTabs: true,
+        hideToolbar: true,
+      };
+
+      new window.tableau.Viz(vizRef.current, vizUrl, options);
+    };
+
+    // Check if Tableau API is already loaded
+    if (typeof window.tableau !== 'undefined') {
+      initViz();
+    } else {
+      // If not, wait for it to load
+      window.addEventListener('tableauApiLoaded', initViz);
+      return () => window.removeEventListener('tableauApiLoaded', initViz);
     }
-
-    const options = {
-      token: token,
-      height: '600px',
-      width: '100%',
-      hideTabs: true,
-      hideToolbar: true,
-    };
-
-    const viz = new window.tableau.Viz(vizRef.current, vizUrl, options);
-
-    return () => {
-      viz.dispose();
-    };
   }, [token]);
 
   if (error) {
