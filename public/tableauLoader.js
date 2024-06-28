@@ -10,10 +10,16 @@ function loadTableauAPI() {
           if (window.tableau && window.tableau.Viz) {
             resolve();
           } else {
-            reject(new Error('Tableau API failed to load'));
+            const error = new Error('Tableau API failed to load');
+            console.error('Error loading Tableau API:', error);
+            reject(error);
           }
         };
-        script.onerror = () => reject(new Error('Failed to load Tableau API script'));
+        script.onerror = (event) => {
+          const error = new Error('Failed to load Tableau API script');
+          console.error('Error loading Tableau API script:', event);
+          reject(error);
+        };
         document.head.appendChild(script);
       }
     });

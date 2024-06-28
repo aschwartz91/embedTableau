@@ -10,10 +10,6 @@ export default function RootLayout({
     <html lang="en">
       <body>
         {children}
-        <Script 
-          src="/tableauLoader.js"
-          strategy="beforeInteractive"
-        />
       </body>
     </html>
   )

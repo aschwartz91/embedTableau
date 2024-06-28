@@ -27,9 +27,18 @@ export default function TableauEmbed() {
         console.log('Received token:', data.token);
         setToken(data.token);
 
-        await window.loadTableauAPI();
-        console.log('Tableau API loaded successfully');
-        setTableauApiLoaded(true);
+        // Load the tableauLoader.js script dynamically
+        const script = document.createElement('script');
+        script.src = '/tableauLoader.js';
+        script.async = true;
+        script.onload = () => {
+          console.log('Tableau API loaded successfully');
+          setTableauApiLoaded(true);
+        };
+        script.onerror = () => {
+          throw new Error('Failed to load Tableau API');
+        };
+        document.head.appendChild(script);
       } catch (e) {
         console.error('Error:', e);
         setError(`Failed to initialize: ${e instanceof Error ? e.message : String(e)}`);
