@@ -62,7 +62,7 @@ export default function TableauEmbed() {
       return;
     }
 
-    const vizUrl = process.env.NEXT_PUBLIC_TABLEAU_VIEW_URL;
+    const vizUrl = `https://us-east-1.online.tableau.com/trusted/${token}/t/schwartz67b9b2a63b/views/SalesMap/Sheet1`;
     
     if (!vizUrl) {
       console.error('Tableau view URL is not set');
