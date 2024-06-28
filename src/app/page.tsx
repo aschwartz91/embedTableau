@@ -18,15 +18,14 @@ export default function TableauEmbed() {
   useEffect(() => {
     const fetchTokenAndLoadTableau = async () => {
       try {
-        // Fetch token
         const response = await fetch('/api/getToken');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
+        console.log('Received token:', data.token); // Log the token
         setToken(data.token);
-
-        // Load Tableau API
+  
         await window.loadTableauAPI();
         console.log('Tableau API loaded successfully');
       } catch (e) {
@@ -34,7 +33,7 @@ export default function TableauEmbed() {
         setError(`Failed to initialize: ${e instanceof Error ? e.message : String(e)}`);
       }
     };
-
+  
     fetchTokenAndLoadTableau();
   }, []);
 
