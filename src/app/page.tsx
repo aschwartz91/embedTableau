@@ -1,95 +1,73 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+// src/app/page.tsx
+'use client';
 
-export default function Home() {
-  return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+import { useEffect, useRef, useState } from 'react';
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+declare global {
+  interface Window {
+    tableau: any;
+  }
+}
 
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
+export default function TableauEmbed() {
+  const vizRef = useRef<HTMLDivElement>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
+  useEffect(() => {
+    const fetchToken = async () => {
+      try {
+        const response = await fetch('/api/getToken');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        if (data.token) {
+          setToken(data.token);
+        } else {
+          throw new Error('Token not found in response');
+        }
+      } catch (e) {
+        console.error('Error fetching token:', e);
+        setError('Failed to fetch token. Please try again later.');
+      }
+    };
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
+    fetchToken();
+  }, []);
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  );
+  useEffect(() => {
+    if (!token || !vizRef.current) return;
+
+    const vizUrl = process.env.NEXT_PUBLIC_TABLEAU_VIEW_URL;
+    
+    if (!vizUrl) {
+      setError('Tableau view URL is not set');
+      return;
+    }
+
+    const options = {
+      token: token,
+      height: '600px',
+      width: '100%',
+      hideTabs: true,
+      hideToolbar: true,
+    };
+
+    const viz = new window.tableau.Viz(vizRef.current, vizUrl, options);
+
+    return () => {
+      viz.dispose();
+    };
+  }, [token]);
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  if (!token) {
+    return <div>Loading...</div>;
+  }
+
+  return <div ref={vizRef}></div>;
 }
