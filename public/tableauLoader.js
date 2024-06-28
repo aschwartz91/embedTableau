@@ -1,4 +1,3 @@
-// public/tableauLoader.js
 function loadTableauAPI() {
     return new Promise((resolve, reject) => {
       if (window.tableau && window.tableau.Viz) {
@@ -6,6 +5,7 @@ function loadTableauAPI() {
       } else {
         const script = document.createElement('script');
         script.src = 'https://public.tableau.com/javascripts/api/tableau-2.min.js';
+        script.async = true;
         script.onload = () => {
           if (window.tableau && window.tableau.Viz) {
             resolve();

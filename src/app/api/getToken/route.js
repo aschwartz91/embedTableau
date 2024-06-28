@@ -20,14 +20,14 @@ export async function GET() {
     }
 
     const payload = {
-      iss: clientId,
-      exp: Math.floor(Date.now() / 1000) + 60 * 5, // Token expires in 5 minutes
-      jti: Math.random().toString(36).substring(2),
-      aud: 'tableau',
-      sub: username,
-      scp: ['tableau:views:embed', 'tableau:content:read'],
-      site_id: siteId // Add this line
-    };
+        iss: clientId,
+        exp: Math.floor(Date.now() / 1000) + 60 * 5, // Token expires in 5 minutes
+        jti: Math.random().toString(36).substring(2),
+        aud: 'tableau',
+        sub: username,
+        scp: ['tableau:views:embed', 'tableau:content:read'],
+        site_id: siteId
+      };
 
     const token = jwt.sign(payload, secret, { algorithm: 'HS256' });
     console.log('Token generated successfully');

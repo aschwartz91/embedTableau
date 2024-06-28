@@ -14,6 +14,7 @@ export default function TableauEmbed() {
   const vizRef = useRef<HTMLDivElement>(null);
   const [token, setToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [tableauApiLoaded, setTableauApiLoaded] = useState(false);
 
   useEffect(() => {
     const fetchTokenAndLoadTableau = async () => {
@@ -23,27 +24,29 @@ export default function TableauEmbed() {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log('Received token:', data.token); // Log the token
+        console.log('Received token:', data.token);
         setToken(data.token);
-  
+
         await window.loadTableauAPI();
         console.log('Tableau API loaded successfully');
+        setTableauApiLoaded(true);
       } catch (e) {
         console.error('Error:', e);
         setError(`Failed to initialize: ${e instanceof Error ? e.message : String(e)}`);
       }
     };
-  
+
     fetchTokenAndLoadTableau();
   }, []);
 
   useEffect(() => {
     console.log('Tableau View URL:', process.env.NEXT_PUBLIC_TABLEAU_VIEW_URL);
     
-    if (!token || !vizRef.current || !window.tableau || !window.tableau.Viz) {
+    if (!token || !vizRef.current || !tableauApiLoaded || !window.tableau || !window.tableau.Viz) {
       console.log('Not ready to create viz:', { 
         token: !!token, 
         vizRef: !!vizRef.current, 
+        tableauApiLoaded,
         tableau: !!window.tableau, 
         tableauViz: !!(window.tableau && window.tableau.Viz) 
       });
@@ -73,15 +76,15 @@ export default function TableauEmbed() {
       console.error('Error creating Tableau viz:', e);
       setError(`Failed to create Tableau visualization: ${e instanceof Error ? e.message : String(e)}`);
     }
-  }, [token]);
+  }, [token, tableauApiLoaded]);
 
   if (error) {
     return <div>Error: {error}</div>;
   }
 
-  if (!token) {
+  if (!token || !tableauApiLoaded) {
     return <div>Loading...</div>;
   }
 
-  return <div ref={vizRef}></div>;
+  return <div ref={vizRef} style={{width: '100%', height: '600px'}}></div>;
 }
