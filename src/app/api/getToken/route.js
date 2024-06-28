@@ -10,6 +10,10 @@ export async function GET() {
     const username = 'external\\schwartz@copilot.com'; // Make sure this matches exactly with your Tableau username
     const siteId = 'schwartz67b9b2a63b'; // Add this line with your actual site ID
 
+
+    console.log("secret: " + secret);
+    console.log("clientID: " + clientId);
+    console.log("username: " + username);
     console.log('Environment variables:', { 
       secret: secret ? 'Set' : 'Not set',
       clientId: clientId ? 'Set' : 'Not set'
