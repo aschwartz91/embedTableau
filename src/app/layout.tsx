@@ -7,9 +7,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <Script src="https://public.tableau.com/javascripts/api/tableau-2.min.js" strategy="afterInteractive" />
-      </head>
       <body>
         {children}
       </body>
