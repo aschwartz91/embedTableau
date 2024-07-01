@@ -1,4 +1,3 @@
-// src/app/layout.tsx
 import Script from 'next/script'
 
 export default function RootLayout({
@@ -8,6 +7,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <Script src="https://public.tableau.com/javascripts/api/tableau-2.min.js" strategy="beforeInteractive" />
+      </head>
       <body>
         {children}
       </body>
