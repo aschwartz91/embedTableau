@@ -62,7 +62,7 @@ export default function TableauEmbed() {
           }
 
           console.log("Initializing Tableau viz");
-          const vizUrl = `${process.env.NEXT_PUBLIC_TABLEAU_VIEW_URL}?:embed=yes`;
+          const vizUrl = `${process.env.NEXT_PUBLIC_TABLEAU_VIEW_URL}`;
           const options = {
             hideTabs: true,
             hideToolbar: true,
