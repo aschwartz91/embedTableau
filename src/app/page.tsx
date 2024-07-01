@@ -17,9 +17,17 @@ export default function TableauEmbed() {
   useEffect(() => {
     const loadTableauAPI = () => {
       return new Promise<void>((resolve, reject) => {
+        if (window.tableau && window.tableau.Viz) {
+          console.log("Tableau API already loaded");
+          setTableauLoaded(true);
+          resolve();
+          return;
+        }
+
         const script = document.createElement('script');
         script.src = 'https://public.tableau.com/javascripts/api/tableau-2.min.js';
         script.onload = () => {
+          console.log("Tableau API script loaded");
           setTableauLoaded(true);
           resolve();
         };
@@ -28,30 +36,44 @@ export default function TableauEmbed() {
       });
     };
 
+    const fetchToken = async () => {
+      const response = await fetch('/api/getToken');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log("Token fetched successfully");
+      return data.token;
+    };
+
     const initializeTableau = async () => {
       try {
         await loadTableauAPI();
-        const response = await fetch('/api/getToken');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setToken(data.token);
+        const fetchedToken = await fetchToken();
+        setToken(fetchedToken);
 
-        if (!vizRef.current || !window.tableau || !window.tableau.Viz) {
-          throw new Error('Tableau API or container not ready');
-        }
+        // Add a small delay to ensure everything is ready
+        setTimeout(() => {
+          if (!vizRef.current) {
+            throw new Error('Viz container not ready');
+          }
+          if (!window.tableau || !window.tableau.Viz) {
+            throw new Error('Tableau API not ready');
+          }
 
-        const vizUrl = `${process.env.NEXT_PUBLIC_TABLEAU_VIEW_URL}?:embed=yes`;
-        const options = {
-          hideTabs: true,
-          hideToolbar: true,
-          width: '100%',
-          height: '600px',
-          token: data.token,
-        };
+          console.log("Initializing Tableau viz");
+          const vizUrl = `${process.env.NEXT_PUBLIC_TABLEAU_VIEW_URL}?:embed=yes`;
+          const options = {
+            hideTabs: true,
+            hideToolbar: true,
+            width: '100%',
+            height: '600px',
+            token: fetchedToken,
+          };
 
-        new window.tableau.Viz(vizRef.current, vizUrl, options);
+          new window.tableau.Viz(vizRef.current, vizUrl, options);
+        }, 500);  // 500ms delay
+
       } catch (e) {
         console.error('Error:', e);
         setError(`Failed to initialize: ${e instanceof Error ? e.message : String(e)}`);
