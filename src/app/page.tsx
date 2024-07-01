@@ -12,8 +12,22 @@ export default function TableauEmbed() {
   const vizRef = useRef<HTMLDivElement>(null);
   const [token, setToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [tableauLoaded, setTableauLoaded] = useState(false);
 
   useEffect(() => {
+    const checkTableauLoaded = () => {
+      if (window.tableau && window.tableau.Viz) {
+        setTableauLoaded(true);
+      } else {
+        setTimeout(checkTableauLoaded, 100);
+      }
+    };
+    checkTableauLoaded();
+  }, []);
+
+  useEffect(() => {
+    if (!tableauLoaded) return;
+
     const fetchTokenAndInitViz = async () => {
       try {
         const response = await fetch('/api/getToken');
@@ -23,11 +37,11 @@ export default function TableauEmbed() {
         const data = await response.json();
         setToken(data.token);
 
-        if (!vizRef.current || !window.tableau) {
-          throw new Error('Tableau API or container not ready');
+        if (!vizRef.current) {
+          throw new Error('Viz container not ready');
         }
 
-        const vizUrl = `${process.env.NEXT_PUBLIC_TABLEAU_VIEW_URL}?:embed=yes&:toolbar=no`;
+        const vizUrl = `${process.env.NEXT_PUBLIC_TABLEAU_VIEW_URL}?:embed=yes`;
         const options = {
           hideTabs: true,
           hideToolbar: true,
@@ -44,14 +58,19 @@ export default function TableauEmbed() {
     };
 
     fetchTokenAndInitViz();
-  }, []);
+  }, [tableauLoaded]);
 
   if (error) {
     return <div>Error: {error}</div>;
   }
 
+  if (!tableauLoaded || !token) {
+    return <div>Loading...</div>;
+  }
+
   return <div ref={vizRef} style={{width: '100%', height: '600px'}}></div>;
 }
+
 /*// src/app/page.tsx
 'use client';
 
